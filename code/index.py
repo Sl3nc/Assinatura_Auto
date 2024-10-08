@@ -72,7 +72,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.setupUi(self)
 
         action_main = self.pushButton.addAction('Gerar Ass.')
-        action_main.clicked.connect(self.executar())
+        action_main.clicked.connect(self.executar)
 
     def onde_salvar(self):
         file = messagebox.messasksaveasfilename(title='Favor selecionar a pasta onde será salvo', filetypes=((".docx","*.docx"),))
@@ -88,15 +88,16 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
     def executar(self):
         try:
-            if self.comboBox == '':
-                raise 'Favor selecione seu setor!'
-            elif self.lineEdit == '':
+            if self.lineEdit.text() == '':
                 raise 'Favor insirir seu nome!'
+            elif self.comboBox.currentText() == '':
+                raise 'Favor selecione seu setor!'
             
             ass = Assinatura()
             txt = Texto()
 
-            ass.preencher_modelo(self.lineEdit, self.comboBox)
+            ass.preencher_modelo(
+                self.lineEdit.text(), self.comboBox.currentText())
 
             nome_img = ass.gerar_png()
             nome_arq = self.onde_salvar()
