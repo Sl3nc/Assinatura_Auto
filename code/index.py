@@ -1,4 +1,3 @@
-from PySide6.QtCore import Qt
 from src.window_ass import Ui_MainWindow
 from PySide6.QtWidgets import (QMainWindow, QApplication, QWidget)
 from docxtpl import DocxTemplate, InlineImage
@@ -71,8 +70,8 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         super().__init__(parent)
         self.setupUi(self)
 
-        action_main = self.pushButton.addAction('Gerar Ass.')
-        action_main.clicked.connect(self.executar)
+        self.pushButton.clicked.connect(
+            self.executar)
 
     def onde_salvar(self):
         file = messagebox.messasksaveasfilename(title='Favor selecionar a pasta onde será salvo', filetypes=((".docx","*.docx"),))
@@ -89,9 +88,9 @@ class MainWindow(Ui_MainWindow, QMainWindow):
     def executar(self):
         try:
             if self.lineEdit.text() == '':
-                raise 'Favor insirir seu nome!'
+                raise Exception('Favor insirir seu nome!')
             elif self.comboBox.currentText() == '':
-                raise 'Favor selecione seu setor!'
+                raise Exception('Favor selecione seu setor!')
             
             ass = Assinatura()
             txt = Texto()
@@ -107,11 +106,12 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             messagebox.showinfo(title='Aviso', message='Abrindo o arquivo gerado!')
 
             os.startfile(nome_arq+'.docx')
-        except:
-            Exception
+            
+        except Exception as error:
+            messagebox.showerror(title='Aviso', message= str(error))
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
+    app = QApplication()
     window = MainWindow()
     window.show()
     app.exec()

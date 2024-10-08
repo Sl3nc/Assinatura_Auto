@@ -1,0 +1,1 @@
+Esse aspose é muito pesado, ele que está travando o app
