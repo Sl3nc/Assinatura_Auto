@@ -25,19 +25,21 @@ class Arquivo:
         self.caminho.render(ref)
         self.caminho.save(path)
 
+    def enquadro(self, img:str):
+        return InlineImage(self.caminho, img, width=Mm(100))
+
 class Texto:
     def __init__(self) -> None:
         self.complemento = Arquivo(resource_path('src\\base_texto.docx'))
         self.KEY_IMG = 'img'
         pass
 
-    def add_img(self, img, nome_arq: str):
-        myimage = InlineImage(
-            self.complemento, img, width=Mm(20), height=Mm(10))
-
-        ref = {self.KEY_IMG: myimage}
-
-        self.complemento.renderizar(ref, nome_arq)
+    def add_img(self, nome_png: str, nome_arq: str):
+        my_image = self.complemento.enquadro(nome_png)
+        
+        ref = {self.KEY_IMG: my_image}
+        self.complemento.renderizar(ref, nome_arq+'.docx')
+        os.remove(nome_png)
 
 class Assinatura:
     def __init__(self) -> None:
@@ -72,7 +74,7 @@ class Assinatura:
 
         os.remove(self.nome_arq)
 
-        return self.nome_arq
+        return self.nome_png
 
 class MainWindow(Ui_MainWindow, QMainWindow):
     def __init__(self, parent = None) -> None:
@@ -102,14 +104,14 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             ass.preencher_modelo(
                 self.lineEdit.text(), self.comboBox.currentText().lower())
 
-            nome_img = ass.gerar_png()
+            img = ass.gerar_png()
             nome_arq = self.onde_salvar()
 
-            txt.add_img(nome_img, nome_arq)
+            txt.add_img(img, nome_arq)
 
-            # messagebox.showinfo(title='Aviso', message='Abrindo o arquivo gerado!')
+            messagebox.showinfo(title='Aviso', message='Abrindo o arquivo gerado!')
 
-            # os.startfile(nome_arq+'.docx')
+            os.startfile(nome_arq+'.docx')
             
         # except Exception as error:
         #     messagebox.showerror(title='Aviso', message= str(error))
