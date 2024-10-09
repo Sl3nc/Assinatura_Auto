@@ -17,25 +17,6 @@
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="0" column="0">
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="1" colspan="2">
-       <widget class="QLabel" name="label">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="font">
-         <font>
-          <family>Arial Rounded MT Bold</family>
-          <pointsize>21</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>Gerador de assinatura</string>
-        </property>
-       </widget>
-      </item>
       <item row="5" column="2">
        <widget class="QPushButton" name="pushButton">
         <property name="sizePolicy">
@@ -75,7 +56,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Favor insira as seguintes informações:</string>
+         <string>Favor preencha o formulário:</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignmentFlag::AlignBottom|Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft</set>
@@ -141,7 +122,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Setor exercido:</string>
+         <string>Selecione o setor :</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
@@ -189,6 +170,50 @@
         </property>
         <property name="orientation">
          <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="2" alignment="">
+       <widget class="QLabel" name="label">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="font">
+         <font>
+          <family>Arial Rounded MT Bold</family>
+          <pointsize>21</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Gerador de assinatura</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLabel" name="label_5">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>100</width>
+          <height>100</height>
+         </size>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="pixmap">
+         <pixmap>../../../../../../Downloads/cps_logo.png</pixmap>
+        </property>
+        <property name="scaledContents">
+         <bool>true</bool>
         </property>
        </widget>
       </item>

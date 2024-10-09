@@ -28,53 +28,48 @@ class Arquivo:
     def enquadro(self, img:str):
         return InlineImage(self.caminho, img, width=Mm(100))
 
-class Texto:
-    def __init__(self) -> None:
-        self.complemento = Arquivo(resource_path('src\\base_texto.docx'))
-        self.KEY_IMG = 'img'
-        pass
-
-    def add_img(self, nome_png: str, nome_arq: str):
-        my_image = self.complemento.enquadro(nome_png)
-        
-        ref = {self.KEY_IMG: my_image}
-        self.complemento.renderizar(ref, nome_arq+'.docx')
-        os.remove(nome_png)
-
 class Assinatura:
     def __init__(self) -> None:
-        self.modelo = Arquivo(resource_path('src\\base_assinaturas.docx'))
-        self.endereco_email = '@deltaprice.com.br'
+        self.base_ass = Arquivo(resource_path('src\\base_assinaturas.docx'))
+        self.base_texto = Arquivo(resource_path('src\\base_texto.docx'))
 
-        self.nome_arq = 'assin_word.docx'
-        self.nome_png = 'page.png'
+        self.ENDR_EMAIL = '@deltaprice.com.br'
+
+        self.NOME_ARQ = 'assin_word.docx'
+        self.NOME_PNG = 'page.png'
 
         self.KEY_NOME = 'nome'
         self.KEY_SETOR = 'setor'
+        self.KEY_IMG = 'img'
         pass
 
     def preencher_modelo(self, nome_func: str, setor: str):
         ref = {
             self.KEY_NOME: nome_func,
-            self.KEY_SETOR: setor + self.endereco_email
+            self.KEY_SETOR: setor + self.ENDR_EMAIL
         }
 
-        self.modelo.renderizar(ref, self.nome_arq)
+        self.base_ass.renderizar(ref, self.NOME_ARQ)
 
     def gerar_png(self):
         # Create a Document object
-        document = Document(self.nome_arq)
+        document = Document(self.NOME_ARQ)
         # Convert a specific page to bitmap image
         imageStream = document.SaveImageToStreams(0, ImageType.Bitmap)
     
         # Save the bitmap to a PNG file
-        with open(self.nome_png,'wb') as imageFile:
+        with open(self.NOME_PNG,'wb') as imageFile:
             imageFile.write(imageStream.ToArray())
         document.Close()
 
-        os.remove(self.nome_arq)
+        os.remove(self.NOME_ARQ)
 
-        return self.nome_png
+    def add_img(self, nome_arq: str):
+        my_image = self.base_texto.enquadro(self.NOME_PNG)
+        
+        ref = {self.KEY_IMG: my_image}
+        self.base_texto.renderizar(ref, nome_arq+'.docx')
+        os.remove(self.NOME_PNG)
 
 class MainWindow(Ui_MainWindow, QMainWindow):
     def __init__(self, parent = None) -> None:
@@ -99,15 +94,14 @@ class MainWindow(Ui_MainWindow, QMainWindow):
                 raise Exception('Favor selecione seu setor!')
             
             ass = Assinatura()
-            txt = Texto()
 
             ass.preencher_modelo(
                 self.lineEdit.text(), self.comboBox.currentText().lower())
 
-            img = ass.gerar_png()
+            ass.gerar_png()
             nome_arq = self.onde_salvar()
 
-            txt.add_img(img, nome_arq)
+            ass.add_img(nome_arq)
 
             messagebox.showinfo(title='Aviso', message='Abrindo o arquivo gerado!')
 
