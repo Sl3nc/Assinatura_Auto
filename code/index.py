@@ -3,6 +3,7 @@ from PySide6.QtWidgets import (QMainWindow, QApplication, QLabel, QWidget)
 from PySide6.QtGui import QMovie, QIcon, QPixmap
 from docxtpl import DocxTemplate, InlineImage
 from tkinter.filedialog import asksaveasfilename
+from PIL import Image
 from tkinter import messagebox
 from spire.doc import Document, ImageType
 from docx.shared import Mm
@@ -29,6 +30,34 @@ class Arquivo:
     def enquadro(self, img:str):
         return InlineImage(self.caminho, img, width=Mm(100))
 
+class Imagem:
+    def __init__(self) -> None:
+        self.AREA_CORTE = (0, 50, 1524, 564)
+        #(esquerda, topo, direita, baixo)
+        pass
+
+    def gerar_png(self, nome_png : str, nome_arq : str):
+        document = Document(nome_arq)
+        # Convert a specific page to bitmap image
+        imageStream = document.SaveImageToStreams(0, ImageType.Bitmap)
+    
+        # Save the bitmap to a PNG file
+        with open(nome_png,'wb') as imageFile:
+            imageFile.write(imageStream.ToArray())
+        document.Close()
+
+        self.__cortar_img(nome_png)
+
+    def __cortar_img(self, nome_png):
+        # Abrindo uma imagem
+        imagem = Image.open(nome_png)
+
+        # Cortando a imagem 
+        imagem_cortada = imagem.crop(self.AREA_CORTE)
+
+        # Salvando a imagem em outro formato
+        imagem_cortada.save(nome_png)
+
 class Assinatura:
     def __init__(self) -> None:
         self.base_ass = Arquivo(resource_path('src\\base_assinaturas.docx'))
@@ -52,20 +81,12 @@ class Assinatura:
 
         self.base_ass.renderizar(ref, self.NOME_ARQ)
 
-    def gerar_png(self):
+    def add_img(self, nome_arq: str):
         # Create a Document object
-        document = Document(self.NOME_ARQ)
-        # Convert a specific page to bitmap image
-        imageStream = document.SaveImageToStreams(0, ImageType.Bitmap)
-    
-        # Save the bitmap to a PNG file
-        with open(self.NOME_PNG,'wb') as imageFile:
-            imageFile.write(imageStream.ToArray())
-        document.Close()
+        Imagem().gerar_png(self.NOME_PNG, self.NOME_ARQ)
 
         os.remove(self.NOME_ARQ)
 
-    def add_img(self, nome_arq: str):
         my_image = self.base_texto.enquadro(self.NOME_PNG)
         
         ref = {self.KEY_IMG: my_image}
@@ -102,7 +123,6 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             ass.preencher_modelo(
                 self.lineEdit.text(), self.comboBox.currentText().lower())
 
-            ass.gerar_png()
             nome_arq = self.onde_salvar()
 
             ass.add_img(nome_arq)
