@@ -267,7 +267,7 @@
          <enum>Qt::TextFormat::RichText</enum>
         </property>
         <property name="pixmap">
-         <pixmap>../../../../../../Downloads/ass-hori.png</pixmap>
+         <pixmap>../img/ass-hori.png</pixmap>
         </property>
         <property name="scaledContents">
          <bool>true</bool>

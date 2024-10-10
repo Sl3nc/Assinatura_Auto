@@ -1,6 +1,6 @@
 from src.window_ass import Ui_MainWindow
 from PySide6.QtWidgets import (QMainWindow, QApplication, QLabel, QWidget)
-from PySide6.QtGui import QMovie, QIcon
+from PySide6.QtGui import QMovie, QIcon, QPixmap
 from docxtpl import DocxTemplate, InlineImage
 from tkinter.filedialog import asksaveasfilename
 from tkinter import messagebox
@@ -77,6 +77,8 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         super().__init__(parent)
         self.setupUi(self)
         self.setWindowIcon((QIcon(resource_path('src\\img\\ass-icon.ico'))))
+        self.logo_hori.setPixmap(QPixmap(resource_path(
+            'src\\img\\ass-hori.png')))
 
         self.pushButton.clicked.connect(
             self.executar)

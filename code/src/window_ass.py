@@ -157,7 +157,7 @@ class Ui_MainWindow(object):
         self.logo_hori.setMinimumSize(QSize(500, 100))
         self.logo_hori.setMaximumSize(QSize(1000, 200))
         self.logo_hori.setTextFormat(Qt.TextFormat.RichText)
-        self.logo_hori.setPixmap(QPixmap(u"../../../../../../Downloads/ass-hori.png"))
+        self.logo_hori.setPixmap(QPixmap(u"../img/ass-hori.png"))
         self.logo_hori.setScaledContents(True)
 
         self.gridLayout.addWidget(self.logo_hori, 0, 1, 1, 1)
