@@ -1,12 +1,14 @@
 from src.window_ass import Ui_MainWindow
-from PySide6.QtWidgets import (QMainWindow, QApplication, QLabel, QWidget)
+from PySide6.QtWidgets import (QMainWindow, QApplication)
 from PySide6.QtGui import QMovie, QIcon, QPixmap
+from PySide6.QtCore import QThread, Signal, QObject
 from docxtpl import DocxTemplate, InlineImage
 from tkinter.filedialog import asksaveasfilename
 from PIL import Image
 from tkinter import messagebox
 from spire.doc import Document, ImageType
 from docx.shared import Mm
+import traceback
 import time
 import os
 import sys
@@ -93,6 +95,17 @@ class Assinatura:
         self.base_texto.renderizar(ref, nome_arq+'.docx')
         os.remove(self.NOME_PNG)
 
+class Worker(QObject):
+    inicio = Signal(bool)
+    fim = Signal(bool)
+
+    def main(self, nome_func: str, setor: str, nome_arq: str):
+        self.inicio.emit(True)
+        ass = Assinatura()
+        ass.preencher_modelo(nome_func, setor)
+        ass.self.add_img(nome_arq)
+        self.fim.emit(False)
+
 class MainWindow(Ui_MainWindow, QMainWindow):
     def __init__(self, parent = None) -> None:
         super().__init__(parent)
@@ -100,6 +113,9 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.setWindowIcon((QIcon(resource_path('src\\img\\ass-icon.ico'))))
         self.logo_hori.setPixmap(QPixmap(resource_path(
             'src\\img\\ass-hori.png')))
+
+        self.movie = QMovie("code/src/img/Loading_2.gif")
+        self.lab_load.setMovie(self.movie)
 
         self.pushButton.clicked.connect(
             self.executar)
@@ -112,27 +128,52 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             )
 
     def executar(self):
-        # try:
+        try:
             if self.lineEdit.text() == '':
                 raise Exception('Favor insirir seu nome!')
             elif self.comboBox.currentText() == '':
                 raise Exception('Favor selecione seu setor!')
-            
-            ass = Assinatura()
 
-            ass.preencher_modelo(
-                self.lineEdit.text(), self.comboBox.currentText().lower())
+            self.nome_arq = self.onde_salvar()
 
-            nome_arq = self.onde_salvar()
+            self._worker = Worker()
+            self._thread = QThread()
+            worker = self._worker
+            thread = self._thread
 
-            ass.add_img(nome_arq)
+            #Coloca o método dentro da thread
+            worker.moveToThread(thread)
+            #Quando a QThread é iniciada (started), executa método automáticamente.
+            thread.started.connect(
+                lambda: worker.main(
+                    self.lineEdit.text(),
+                    self.comboBox.currentText().lower(),
+                    self.nome_arq
+                    )
+            )
+            #Interrompe o loop de eventos da thread
+            worker.fim.connect(thread.quit)
+            #Remove o ass e a thread da memória assim que o finished ocorre
+            worker.fim.connect(thread.deleteLater)
+            thread.finished.connect(worker.deleteLater)
+            #Recebe o sinal para interagir com os widget
+            worker.inicio.connect(self.load) 
+            worker.fim.connect(self.load) 
+            #######################################
+            thread.start() 
+        except Exception as err:
+            print(traceback.print_exc())
+            messagebox.showerror('Aviso', err)
 
+    def load(self, value: bool):
+        if value == True:
+            self.lab_load.show()
+            self.movie.start()
+        elif value == False:
+            self.movie.stop()
+            self.lab_load.hide()
             messagebox.showinfo(title='Aviso', message='Abrindo o arquivo gerado!')
-
-            os.startfile(nome_arq+'.docx')
-            
-        # except Exception as error:
-        #     messagebox.showerror(title='Aviso', message= str(error))
+            os.startfile(self.nome_arq+'.docx')
 
     def onde_salvar(self):
         file = asksaveasfilename(title='Favor selecionar a pasta onde será salvo', filetypes=((".docx","*.docx"),))
