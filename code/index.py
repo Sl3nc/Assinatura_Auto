@@ -100,11 +100,15 @@ class Worker(QObject):
     fim = Signal(bool)
 
     def main(self, nome_func: str, setor: str, nome_arq: str):
-        self.inicio.emit(True)
-        ass = Assinatura()
-        ass.preencher_modelo(nome_func, setor)
-        ass.self.add_img(nome_arq)
-        self.fim.emit(False)
+        try:
+            self.inicio.emit(True)
+            ass = Assinatura()
+            ass.preencher_modelo(nome_func, setor)
+            ass.add_img(nome_arq)
+            self.fim.emit(False)
+        except Exception as err:
+            print(traceback.print_exc())
+            messagebox.showerror('Aviso', err)
 
 class MainWindow(Ui_MainWindow, QMainWindow):
     def __init__(self, parent = None) -> None:
