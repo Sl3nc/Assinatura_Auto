@@ -1,5 +1,6 @@
 from src.window_ass import Ui_MainWindow
-from PySide6.QtWidgets import (QMainWindow, QApplication)
+from PySide6.QtWidgets import (
+    QMainWindow, QApplication, QLabel, QWidget, QGridLayout)
 from PySide6.QtGui import QMovie, QIcon, QPixmap
 from PySide6.QtCore import QThread, Signal, QObject
 from docxtpl import DocxTemplate, InlineImage
@@ -116,6 +117,11 @@ class Worker(QObject):
             print(traceback.print_exc())
             messagebox.showerror('Aviso', err)
 
+    def main2(self):
+        self.inicio.emit(True)
+        time.sleep(5)
+        self.fim.emit(False)
+
 class MainWindow(Ui_MainWindow, QMainWindow):
     def __init__(self, parent = None) -> None:
         super().__init__(parent)
@@ -123,9 +129,6 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.setWindowIcon((QIcon(resource_path('src\\img\\ass-icon.ico'))))
         self.logo_hori.setPixmap(QPixmap(resource_path(
             'src\\img\\ass-hori.png')))
-
-        self.movie = QMovie("code/src/img/Loading_2.gif")
-        self.lab_load.setMovie(self.movie)
 
         self.pushButton.clicked.connect(
             self.executar)
@@ -139,12 +142,13 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
     def executar(self):
         try:
-            if self.lineEdit.text() == '':
-                raise Exception('Favor insirir seu nome!')
-            elif self.comboBox.currentText() == '':
-                raise Exception('Favor selecione seu setor!')
+            # if self.lineEdit.text() == '':
+            #     raise Exception('Favor insirir seu nome!')
+            # elif self.comboBox.currentText() == '':
+            #     raise Exception('Favor selecione seu setor!')
 
-            self.nome_arq = self.onde_salvar()
+            self.nome_arq =  ''
+            #self.onde_salvar()
 
             self._worker = Worker(
                 self.lineEdit.text(),
@@ -157,7 +161,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             thread = self._thread
 
             worker.moveToThread(thread)
-            thread.started.connect(worker.main)
+            thread.started.connect(worker.main2)
             worker.fim.connect(thread.quit)
             worker.fim.connect(thread.deleteLater)
             thread.finished.connect(worker.deleteLater)
@@ -171,13 +175,36 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
     def load(self, value: bool):
         if value == True:
-            self.lab_load.show()
+            self.criar_loading()
+            self.text_load.show()
             self.movie.start()
         elif value == False:
+            self.apagar_loading()
             self.movie.stop()
-            self.lab_load.hide()
+            self.text_load.hide()
+            self.gif_load.hide()
+            self.centralwidget.show()
             messagebox.showinfo(title='Aviso', message='Abrindo o arquivo gerado!')
             os.startfile(self.nome_arq+'.docx')
+
+    def criar_loading(self):
+        self.centralwidget2 = QWidget(self)
+        self.gridLayout2 = QGridLayout(self.centralwidget2)
+
+        self.gif_load = QLabel()
+        self.gridLayout2.addWidget(self.gif_load)
+        self.movie = QMovie("code/src/img/Loading_2.gif")
+        self.gif_load.setMovie(self.movie)
+
+        self.text_load = QLabel()
+        self.gridLayout2.addWidget(self.text_load)
+        self.text_load.setText("Loading...")
+        self.text_load.setStyleSheet("font: 70pt Helvetica; color: white;")
+        self.setCentralWidget(self.centralwidget2)
+
+    def apagar_loading(self):
+        self.centralwidget2.destroy()
+        self.setCentralWidget(self.centralwidget)
 
     def onde_salvar(self):
         return asksaveasfilename(title='Favor selecionar a pasta onde será salvo', filetypes=((".docx","*.docx"),))
