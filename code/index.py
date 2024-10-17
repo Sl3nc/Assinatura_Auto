@@ -99,12 +99,18 @@ class Worker(QObject):
     inicio = Signal(bool)
     fim = Signal(bool)
 
-    def main(self, nome_func: str, setor: str, nome_arq: str):
+    def __init__(self, nome_func: str, setor: str, nome_arq: str) -> None:
+        super().__init__()
+        self.nome_func = nome_func
+        self.setor = setor
+        self.nome_arq = nome_arq
+
+    def main(self):
         try:
             self.inicio.emit(True)
             ass = Assinatura()
-            ass.preencher_modelo(nome_func, setor)
-            ass.add_img(nome_arq)
+            ass.preencher_modelo(self.nome_func, self.setor)
+            ass.add_img(self.nome_arq)
             self.fim.emit(False)
         except Exception as err:
             print(traceback.print_exc())
@@ -140,30 +146,24 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
             self.nome_arq = self.onde_salvar()
 
-            self._worker = Worker()
+            self._worker = Worker(
+                self.lineEdit.text(),
+                self.comboBox.currentText().lower(),
+                self.nome_arq
+                )
+            
             self._thread = QThread()
             worker = self._worker
             thread = self._thread
 
-            #Coloca o método dentro da thread
             worker.moveToThread(thread)
-            #Quando a QThread é iniciada (started), executa método automáticamente.
-            thread.started.connect(
-                lambda: worker.main(
-                    self.lineEdit.text(),
-                    self.comboBox.currentText().lower(),
-                    self.nome_arq
-                    )
-            )
-            #Interrompe o loop de eventos da thread
+            thread.started.connect(worker.main)
             worker.fim.connect(thread.quit)
-            #Remove o ass e a thread da memória assim que o finished ocorre
             worker.fim.connect(thread.deleteLater)
             thread.finished.connect(worker.deleteLater)
-            #Recebe o sinal para interagir com os widget
             worker.inicio.connect(self.load) 
             worker.fim.connect(self.load) 
-            #######################################
+            print('Iniciou Thread')
             thread.start() 
         except Exception as err:
             print(traceback.print_exc())
@@ -180,7 +180,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             os.startfile(self.nome_arq+'.docx')
 
     def onde_salvar(self):
-        file = asksaveasfilename(title='Favor selecionar a pasta onde será salvo', filetypes=((".docx","*.docx"),))
+        return asksaveasfilename(title='Favor selecionar a pasta onde será salvo', filetypes=((".docx","*.docx"),))
 
         if file == '':
             resp = messagebox.askyesno(title='Deseja cancelar a operação?', filetypes=((".docx","*.docx"),))
