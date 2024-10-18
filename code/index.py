@@ -7,7 +7,7 @@ from docxtpl import DocxTemplate, InlineImage
 from tkinter.filedialog import asksaveasfilename
 from PIL import Image
 from tkinter import messagebox
-from spire.doc import Document, ImageType
+import spire.doc as sd
 from docx.shared import Mm
 import traceback
 import time
@@ -40,15 +40,13 @@ class Imagem:
         pass
 
     def gerar_png(self, nome_png : str, nome_arq : str):
-        document = Document(nome_arq)
+        document = sd.Document(nome_arq)
         # Convert a specific page to bitmap image
-        imageStream = document.SaveImageToStreams(0, ImageType.Bitmap)
-    
+        imageStream = document.SaveImageToStreams(0, sd.ImageType.Bitmap)
         # Save the bitmap to a PNG file
         with open(nome_png,'wb') as imageFile:
             imageFile.write(imageStream.ToArray())
         document.Close()
-
         self.__cortar_img(nome_png)
 
     def __cortar_img(self, nome_png):
@@ -63,8 +61,8 @@ class Imagem:
 
 class Assinatura:
     def __init__(self) -> None:
-        self.base_ass = Arquivo(resource_path('src\\base_assinaturas.docx'))
-        self.base_texto = Arquivo(resource_path('src\\base_texto.docx'))
+        self.base_ass = Arquivo(resource_path('src\\bases\\base_assinaturas.docx'))
+        self.base_texto = Arquivo(resource_path('src\\bases\\base_texto.docx'))
 
         self.ENDR_EMAIL = '@deltaprice.com.br'
 
@@ -87,7 +85,6 @@ class Assinatura:
     def add_img(self, nome_arq: str):
         # Create a Document object
         Imagem().gerar_png(self.NOME_PNG, self.NOME_ARQ)
-
         os.remove(self.NOME_ARQ)
 
         my_image = self.base_texto.enquadro(self.NOME_PNG)
@@ -121,9 +118,10 @@ class MainWindow(Ui_MainWindow, QMainWindow):
     def __init__(self, parent = None) -> None:
         super().__init__(parent)
         self.setupUi(self)
-        self.setWindowIcon((QIcon(resource_path('src\\img\\ass-icon.ico'))))
-        self.logo_hori.setPixmap(QPixmap(resource_path(
-            'src\\img\\ass-hori.png')))
+        self.setWindowIcon((QIcon(resource_path('src\\imgs\\ass-icon.ico'))))
+        self.logo_hori.setPixmap(QPixmap(resource_path('src\\imgs\\ass-hori.png')))
+        self.movie = QMovie(resource_path("src\\imgs\\load.gif"))
+        self.gif_load.setMovie(self.movie)
 
         self.pushButton.clicked.connect(
             self.executar)
@@ -134,6 +132,9 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.comboBox.addItems(
             ['Processos', 'Financeiro', 'Fiscal', 'Contabilidade', 'Trabalhista']
             )
+
+        self.text_load.show()
+        self.movie.start()
 
     def executar(self):
         try:
@@ -161,7 +162,6 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             thread.finished.connect(worker.deleteLater)
             worker.inicio.connect(self.load) 
             worker.fim.connect(self.load) 
-            print('Iniciou Thread')
             thread.start() 
         except Exception as err:
             print(traceback.print_exc())
@@ -169,11 +169,13 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
     def load(self, value: bool):
         if value == True:
-            self.criar_loading()
+            self.pushButton.setDisabled(True)
+            self.stackedWidget.setCurrentIndex(1)
             self.text_load.show()
             self.movie.start()
         elif value == False:
-            self.apagar_loading()
+            self.pushButton.setDisabled(False)
+            self.stackedWidget.setCurrentIndex(0)
             self.movie.stop()
             self.text_load.hide()
             self.gif_load.hide()
@@ -181,25 +183,18 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             messagebox.showinfo(title='Aviso', message='Abrindo o arquivo gerado!')
             os.startfile(self.nome_arq+'.docx')
 
-    def criar_loading(self):
-        self.stackedWidget.setCurrentIndex(1)
-        self.movie = QMovie("code/src/img/Loading_2.gif")
-        self.gif_load.setMovie(self.movie)
-
-    def apagar_loading(self):
-        self.stackedWidget.setCurrentIndex(0)
-
     def onde_salvar(self):
         return asksaveasfilename(title='Favor selecionar a pasta onde será salvo', filetypes=((".docx","*.docx"),))
 
-        if file == '':
-            resp = messagebox.askyesno(title='Deseja cancelar a operação?', filetypes=((".docx","*.docx"),))
-            if resp == True:
-                raise 'Operação cancelada!'
-            else:
-                return self.onde_salvar()
+        # if file == '':
+        #     return self.retry_save()
 
-        return file
+    def retry_save(self):
+        resp = messagebox.askyesno(title='Deseja cancelar a operação?', filetypes=((".docx","*.docx"),))
+        if resp == True:
+            raise 'Operação cancelada!'
+        else:
+            return self.onde_salvar()
 
 if __name__ == '__main__':
     app = QApplication()
