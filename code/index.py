@@ -1,12 +1,15 @@
 from src.window_ass import Ui_MainWindow
-from PySide6.QtWidgets import (QMainWindow, QApplication, QLabel, QWidget)
+from PySide6.QtWidgets import (
+    QMainWindow, QApplication, QLabel, QWidget, QGridLayout)
 from PySide6.QtGui import QMovie, QIcon, QPixmap
+from PySide6.QtCore import QThread, Signal, QObject
 from docxtpl import DocxTemplate, InlineImage
 from tkinter.filedialog import asksaveasfilename
 from PIL import Image
 from tkinter import messagebox
-from spire.doc import Document, ImageType
+import spire.doc as sd
 from docx.shared import Mm
+import traceback
 import time
 import os
 import sys
@@ -37,15 +40,13 @@ class Imagem:
         pass
 
     def gerar_png(self, nome_png : str, nome_arq : str):
-        document = Document(nome_arq)
+        document = sd.Document(nome_arq)
         # Convert a specific page to bitmap image
-        imageStream = document.SaveImageToStreams(0, ImageType.Bitmap)
-    
+        imageStream = document.SaveImageToStreams(0, sd.ImageType.Bitmap)
         # Save the bitmap to a PNG file
         with open(nome_png,'wb') as imageFile:
             imageFile.write(imageStream.ToArray())
         document.Close()
-
         self.__cortar_img(nome_png)
 
     def __cortar_img(self, nome_png):
@@ -60,8 +61,8 @@ class Imagem:
 
 class Assinatura:
     def __init__(self) -> None:
-        self.base_ass = Arquivo(resource_path('src\\base_assinaturas.docx'))
-        self.base_texto = Arquivo(resource_path('src\\base_texto.docx'))
+        self.base_ass = Arquivo(resource_path('src\\bases\\base_assinaturas.docx'))
+        self.base_texto = Arquivo(resource_path('src\\bases\\base_texto.docx'))
 
         self.ENDR_EMAIL = '@deltaprice.com.br'
 
@@ -84,7 +85,6 @@ class Assinatura:
     def add_img(self, nome_arq: str):
         # Create a Document object
         Imagem().gerar_png(self.NOME_PNG, self.NOME_ARQ)
-
         os.remove(self.NOME_ARQ)
 
         my_image = self.base_texto.enquadro(self.NOME_PNG)
@@ -93,13 +93,35 @@ class Assinatura:
         self.base_texto.renderizar(ref, nome_arq+'.docx')
         os.remove(self.NOME_PNG)
 
+class Worker(QObject):
+    inicio = Signal(bool)
+    fim = Signal(bool)
+
+    def __init__(self, nome_func: str, setor: str, nome_arq: str) -> None:
+        super().__init__()
+        self.nome_func = nome_func
+        self.setor = setor
+        self.nome_arq = nome_arq
+
+    def main(self):
+        try:
+            self.inicio.emit(True)
+            ass = Assinatura()
+            ass.preencher_modelo(self.nome_func, self.setor)
+            ass.add_img(self.nome_arq)
+            self.fim.emit(False)
+        except Exception as err:
+            print(traceback.print_exc())
+            messagebox.showerror('Aviso', err)
+
 class MainWindow(Ui_MainWindow, QMainWindow):
     def __init__(self, parent = None) -> None:
         super().__init__(parent)
         self.setupUi(self)
-        self.setWindowIcon((QIcon(resource_path('src\\img\\ass-icon.ico'))))
-        self.logo_hori.setPixmap(QPixmap(resource_path(
-            'src\\img\\ass-hori.png')))
+        self.setWindowIcon((QIcon(resource_path('src\\imgs\\ass-icon.ico'))))
+        self.logo_hori.setPixmap(QPixmap(resource_path('src\\imgs\\ass-hori.png')))
+        self.movie = QMovie(resource_path("src\\imgs\\load.gif"))
+        self.gif_load.setMovie(self.movie)
 
         self.pushButton.clicked.connect(
             self.executar)
@@ -111,40 +133,68 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             ['Processos', 'Financeiro', 'Fiscal', 'Contabilidade', 'Trabalhista']
             )
 
+        self.text_load.show()
+        self.movie.start()
+
     def executar(self):
-        # try:
+        try:
             if self.lineEdit.text() == '':
                 raise Exception('Favor insirir seu nome!')
             elif self.comboBox.currentText() == '':
                 raise Exception('Favor selecione seu setor!')
+
+            self.nome_arq =  self.onde_salvar()
+
+            self._worker = Worker(
+                self.lineEdit.text(),
+                self.comboBox.currentText().lower(),
+                self.nome_arq
+                )
             
-            ass = Assinatura()
+            self._thread = QThread()
+            worker = self._worker
+            thread = self._thread
 
-            ass.preencher_modelo(
-                self.lineEdit.text(), self.comboBox.currentText().lower())
+            worker.moveToThread(thread)
+            thread.started.connect(worker.main)
+            worker.fim.connect(thread.quit)
+            worker.fim.connect(thread.deleteLater)
+            thread.finished.connect(worker.deleteLater)
+            worker.inicio.connect(self.load) 
+            worker.fim.connect(self.load) 
+            thread.start() 
+        except Exception as err:
+            print(traceback.print_exc())
+            messagebox.showerror('Aviso', err)
 
-            nome_arq = self.onde_salvar()
-
-            ass.add_img(nome_arq)
-
+    def load(self, value: bool):
+        if value == True:
+            self.pushButton.setDisabled(True)
+            self.stackedWidget.setCurrentIndex(1)
+            self.text_load.show()
+            self.movie.start()
+        elif value == False:
+            self.pushButton.setDisabled(False)
+            self.stackedWidget.setCurrentIndex(0)
+            self.movie.stop()
+            self.text_load.hide()
+            self.gif_load.hide()
+            self.centralwidget.show()
             messagebox.showinfo(title='Aviso', message='Abrindo o arquivo gerado!')
-
-            os.startfile(nome_arq+'.docx')
-            
-        # except Exception as error:
-        #     messagebox.showerror(title='Aviso', message= str(error))
+            os.startfile(self.nome_arq+'.docx')
 
     def onde_salvar(self):
-        file = asksaveasfilename(title='Favor selecionar a pasta onde será salvo', filetypes=((".docx","*.docx"),))
+        return asksaveasfilename(title='Favor selecionar a pasta onde será salvo', filetypes=((".docx","*.docx"),))
 
-        if file == '':
-            resp = messagebox.askyesno(title='Deseja cancelar a operação?', filetypes=((".docx","*.docx"),))
-            if resp == True:
-                raise 'Operação cancelada!'
-            else:
-                return self.onde_salvar()
+        # if file == '':
+        #     return self.retry_save()
 
-        return file
+    def retry_save(self):
+        resp = messagebox.askyesno(title='Deseja cancelar a operação?', filetypes=((".docx","*.docx"),))
+        if resp == True:
+            raise 'Operação cancelada!'
+        else:
+            return self.onde_salvar()
 
 if __name__ == '__main__':
     app = QApplication()
