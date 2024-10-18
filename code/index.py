@@ -1,10 +1,15 @@
 from src.window_ass import Ui_MainWindow
-from PySide6.QtWidgets import (QMainWindow, QApplication, QWidget)
+from PySide6.QtWidgets import (
+    QMainWindow, QApplication, QLabel, QWidget, QGridLayout)
+from PySide6.QtGui import QMovie, QIcon, QPixmap
+from PySide6.QtCore import QThread, Signal, QObject
 from docxtpl import DocxTemplate, InlineImage
 from tkinter.filedialog import asksaveasfilename
+from PIL import Image
 from tkinter import messagebox
-from spire.doc import Document, ImageType
+import spire.doc as sd
 from docx.shared import Mm
+import traceback
 import time
 import os
 import sys
@@ -28,58 +33,95 @@ class Arquivo:
     def enquadro(self, img:str):
         return InlineImage(self.caminho, img, width=Mm(100))
 
-class Texto:
+class Imagem:
     def __init__(self) -> None:
-        self.complemento = Arquivo(resource_path('src\\base_texto.docx'))
-        self.KEY_IMG = 'img'
+        self.AREA_CORTE = (0, 50, 1524, 564)
+        #(esquerda, topo, direita, baixo)
         pass
 
-    def add_img(self, nome_png: str, nome_arq: str):
-        my_image = self.complemento.enquadro(nome_png)
-        
-        ref = {self.KEY_IMG: my_image}
-        self.complemento.renderizar(ref, nome_arq+'.docx')
-        os.remove(nome_png)
+    def gerar_png(self, nome_png : str, nome_arq : str):
+        document = sd.Document(nome_arq)
+        # Convert a specific page to bitmap image
+        imageStream = document.SaveImageToStreams(0, sd.ImageType.Bitmap)
+        # Save the bitmap to a PNG file
+        with open(nome_png,'wb') as imageFile:
+            imageFile.write(imageStream.ToArray())
+        document.Close()
+        self.__cortar_img(nome_png)
+
+    def __cortar_img(self, nome_png):
+        # Abrindo uma imagem
+        imagem = Image.open(nome_png)
+
+        # Cortando a imagem 
+        imagem_cortada = imagem.crop(self.AREA_CORTE)
+
+        # Salvando a imagem em outro formato
+        imagem_cortada.save(nome_png)
 
 class Assinatura:
     def __init__(self) -> None:
-        self.modelo = Arquivo(resource_path('src\\base_assinaturas.docx'))
-        self.endereco_email = '@deltaprice.com.br'
+        self.base_ass = Arquivo(resource_path('src\\bases\\base_assinaturas.docx'))
+        self.base_texto = Arquivo(resource_path('src\\bases\\base_texto.docx'))
 
-        self.nome_arq = 'assin_word.docx'
-        self.nome_png = 'page.png'
+        self.ENDR_EMAIL = '@deltaprice.com.br'
+
+        self.NOME_ARQ = 'assin_word.docx'
+        self.NOME_PNG = 'page.png'
 
         self.KEY_NOME = 'nome'
         self.KEY_SETOR = 'setor'
+        self.KEY_IMG = 'img'
         pass
 
     def preencher_modelo(self, nome_func: str, setor: str):
         ref = {
             self.KEY_NOME: nome_func,
-            self.KEY_SETOR: setor + self.endereco_email
+            self.KEY_SETOR: setor + self.ENDR_EMAIL
         }
 
-        self.modelo.renderizar(ref, self.nome_arq)
+        self.base_ass.renderizar(ref, self.NOME_ARQ)
 
-    def gerar_png(self):
+    def add_img(self, nome_arq: str):
         # Create a Document object
-        document = Document(self.nome_arq)
-        # Convert a specific page to bitmap image
-        imageStream = document.SaveImageToStreams(0, ImageType.Bitmap)
-    
-        # Save the bitmap to a PNG file
-        with open(self.nome_png,'wb') as imageFile:
-            imageFile.write(imageStream.ToArray())
-        document.Close()
+        Imagem().gerar_png(self.NOME_PNG, self.NOME_ARQ)
+        os.remove(self.NOME_ARQ)
 
-        os.remove(self.nome_arq)
+        my_image = self.base_texto.enquadro(self.NOME_PNG)
+        
+        ref = {self.KEY_IMG: my_image}
+        self.base_texto.renderizar(ref, nome_arq+'.docx')
+        os.remove(self.NOME_PNG)
 
-        return self.nome_png
+class Worker(QObject):
+    inicio = Signal(bool)
+    fim = Signal(bool)
+
+    def __init__(self, nome_func: str, setor: str, nome_arq: str) -> None:
+        super().__init__()
+        self.nome_func = nome_func
+        self.setor = setor
+        self.nome_arq = nome_arq
+
+    def main(self):
+        try:
+            self.inicio.emit(True)
+            ass = Assinatura()
+            ass.preencher_modelo(self.nome_func, self.setor)
+            ass.add_img(self.nome_arq)
+            self.fim.emit(False)
+        except Exception as err:
+            print(traceback.print_exc())
+            messagebox.showerror('Aviso', err)
 
 class MainWindow(Ui_MainWindow, QMainWindow):
     def __init__(self, parent = None) -> None:
         super().__init__(parent)
         self.setupUi(self)
+        self.setWindowIcon((QIcon(resource_path('src\\imgs\\ass-icon.ico'))))
+        self.logo_hori.setPixmap(QPixmap(resource_path('src\\imgs\\ass-hori.png')))
+        self.movie = QMovie(resource_path("src\\imgs\\load.gif"))
+        self.gif_load.setMovie(self.movie)
 
         self.pushButton.clicked.connect(
             self.executar)
@@ -91,42 +133,68 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             ['Processos', 'Financeiro', 'Fiscal', 'Contabilidade', 'Trabalhista']
             )
 
+        self.text_load.show()
+        self.movie.start()
+
     def executar(self):
-        # try:
+        try:
             if self.lineEdit.text() == '':
                 raise Exception('Favor insirir seu nome!')
             elif self.comboBox.currentText() == '':
                 raise Exception('Favor selecione seu setor!')
+
+            self.nome_arq =  self.onde_salvar()
+
+            self._worker = Worker(
+                self.lineEdit.text(),
+                self.comboBox.currentText().lower(),
+                self.nome_arq
+                )
             
-            ass = Assinatura()
-            txt = Texto()
+            self._thread = QThread()
+            worker = self._worker
+            thread = self._thread
 
-            ass.preencher_modelo(
-                self.lineEdit.text(), self.comboBox.currentText().lower())
+            worker.moveToThread(thread)
+            thread.started.connect(worker.main)
+            worker.fim.connect(thread.quit)
+            worker.fim.connect(thread.deleteLater)
+            thread.finished.connect(worker.deleteLater)
+            worker.inicio.connect(self.load) 
+            worker.fim.connect(self.load) 
+            thread.start() 
+        except Exception as err:
+            print(traceback.print_exc())
+            messagebox.showerror('Aviso', err)
 
-            img = ass.gerar_png()
-            nome_arq = self.onde_salvar()
-
-            txt.add_img(img, nome_arq)
-
+    def load(self, value: bool):
+        if value == True:
+            self.pushButton.setDisabled(True)
+            self.stackedWidget.setCurrentIndex(1)
+            self.text_load.show()
+            self.movie.start()
+        elif value == False:
+            self.pushButton.setDisabled(False)
+            self.stackedWidget.setCurrentIndex(0)
+            self.movie.stop()
+            self.text_load.hide()
+            self.gif_load.hide()
+            self.centralwidget.show()
             messagebox.showinfo(title='Aviso', message='Abrindo o arquivo gerado!')
-
-            os.startfile(nome_arq+'.docx')
-            
-        # except Exception as error:
-        #     messagebox.showerror(title='Aviso', message= str(error))
+            os.startfile(self.nome_arq+'.docx')
 
     def onde_salvar(self):
-        file = asksaveasfilename(title='Favor selecionar a pasta onde será salvo', filetypes=((".docx","*.docx"),))
+        return asksaveasfilename(title='Favor selecionar a pasta onde será salvo', filetypes=((".docx","*.docx"),))
 
-        if file == '':
-            resp = messagebox.askyesno(title='Deseja cancelar a operação?', filetypes=((".docx","*.docx"),))
-            if resp == True:
-                raise 'Operação cancelada!'
-            else:
-                return self.onde_salvar()
+        # if file == '':
+        #     return self.retry_save()
 
-        return file
+    def retry_save(self):
+        resp = messagebox.askyesno(title='Deseja cancelar a operação?', filetypes=((".docx","*.docx"),))
+        if resp == True:
+            raise 'Operação cancelada!'
+        else:
+            return self.onde_salvar()
 
 if __name__ == '__main__':
     app = QApplication()
