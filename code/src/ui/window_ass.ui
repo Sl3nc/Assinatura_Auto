@@ -43,14 +43,17 @@
           <property name="minimumSize">
            <size>
             <width>0</width>
-            <height>15</height>
+            <height>6</height>
            </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(85, 170, 255);</string>
           </property>
           <property name="frameShadow">
            <enum>QFrame::Shadow::Plain</enum>
           </property>
           <property name="lineWidth">
-           <number>5</number>
+           <number>-1</number>
           </property>
           <property name="orientation">
            <enum>Qt::Orientation::Horizontal</enum>
@@ -100,7 +103,7 @@
           <property name="minimumSize">
            <size>
             <width>0</width>
-            <height>15</height>
+            <height>7</height>
            </size>
           </property>
           <property name="maximumSize">
@@ -109,11 +112,14 @@
             <height>16777215</height>
            </size>
           </property>
+          <property name="styleSheet">
+           <string notr="true">background-color: rgb(85, 170, 255);</string>
+          </property>
           <property name="frameShadow">
            <enum>QFrame::Shadow::Plain</enum>
           </property>
           <property name="lineWidth">
-           <number>5</number>
+           <number>-1</number>
           </property>
           <property name="orientation">
            <enum>Qt::Orientation::Horizontal</enum>
@@ -181,23 +187,23 @@
            <enum>QFrame::Shadow::Raised</enum>
           </property>
           <layout class="QGridLayout" name="gridLayout_3">
-           <item row="2" column="1">
-            <widget class="QLabel" name="text_load">
-             <property name="font">
-              <font>
-               <pointsize>26</pointsize>
-               <italic>true</italic>
-              </font>
+           <item row="1" column="0">
+            <spacer name="horizontalSpacer_3">
+             <property name="orientation">
+              <enum>Qt::Orientation::Horizontal</enum>
              </property>
-             <property name="text">
-              <string>Carregando...</string>
+             <property name="sizeType">
+              <enum>QSizePolicy::Policy::Expanding</enum>
              </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignCenter</set>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
              </property>
-            </widget>
+            </spacer>
            </item>
-           <item row="1" column="1" alignment="">
+           <item row="1" column="1">
             <widget class="QLabel" name="gif_load">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
@@ -218,7 +224,7 @@
               <enum>Qt::TextFormat::PlainText</enum>
              </property>
              <property name="pixmap">
-              <pixmap>../imgs/loaging_ofc.gif</pixmap>
+              <pixmap>../imgs/load.gif</pixmap>
              </property>
              <property name="scaledContents">
               <bool>true</bool>
@@ -227,22 +233,6 @@
               <set>Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignTop</set>
              </property>
             </widget>
-           </item>
-           <item row="1" column="0">
-            <spacer name="horizontalSpacer_3">
-             <property name="orientation">
-              <enum>Qt::Orientation::Horizontal</enum>
-             </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::Policy::Expanding</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
            </item>
            <item row="1" column="2">
             <spacer name="horizontalSpacer_4">
@@ -259,6 +249,22 @@
               </size>
              </property>
             </spacer>
+           </item>
+           <item row="2" column="1">
+            <widget class="QLabel" name="text_load">
+             <property name="font">
+              <font>
+               <pointsize>18</pointsize>
+               <italic>true</italic>
+              </font>
+             </property>
+             <property name="text">
+              <string>Carregando...</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>
