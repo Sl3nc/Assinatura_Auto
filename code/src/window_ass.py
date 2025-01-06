@@ -52,9 +52,10 @@ class Ui_MainWindow(object):
         sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.line.sizePolicy().hasHeightForWidth())
         self.line.setSizePolicy(sizePolicy1)
-        self.line.setMinimumSize(QSize(0, 15))
+        self.line.setMinimumSize(QSize(0, 6))
+        self.line.setStyleSheet(u"background-color: rgb(85, 170, 255);")
         self.line.setFrameShadow(QFrame.Shadow.Plain)
-        self.line.setLineWidth(5)
+        self.line.setLineWidth(-1)
         self.line.setFrameShape(QFrame.Shape.HLine)
 
         self.gridLayout.addWidget(self.line, 1, 0, 1, 3)
@@ -80,10 +81,11 @@ class Ui_MainWindow(object):
 
         self.line_2 = QFrame(self.Page1)
         self.line_2.setObjectName(u"line_2")
-        self.line_2.setMinimumSize(QSize(0, 15))
+        self.line_2.setMinimumSize(QSize(0, 7))
         self.line_2.setMaximumSize(QSize(16777214, 16777215))
+        self.line_2.setStyleSheet(u"background-color: rgb(85, 170, 255);")
         self.line_2.setFrameShadow(QFrame.Shadow.Plain)
-        self.line_2.setLineWidth(5)
+        self.line_2.setLineWidth(-1)
         self.line_2.setFrameShape(QFrame.Shape.HLine)
 
         self.gridLayout.addWidget(self.line_2, 4, 0, 1, 2)
@@ -135,15 +137,9 @@ class Ui_MainWindow(object):
         self.frame_3.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_3 = QGridLayout(self.frame_3)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
-        self.text_load = QLabel(self.frame_3)
-        self.text_load.setObjectName(u"text_load")
-        font2 = QFont()
-        font2.setPointSize(26)
-        font2.setItalic(True)
-        self.text_load.setFont(font2)
-        self.text_load.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_3.addWidget(self.text_load, 2, 1, 1, 1)
+        self.gridLayout_3.addItem(self.horizontalSpacer_3, 1, 0, 1, 1)
 
         self.gif_load = QLabel(self.frame_3)
         self.gif_load.setObjectName(u"gif_load")
@@ -151,19 +147,25 @@ class Ui_MainWindow(object):
         self.gif_load.setSizePolicy(sizePolicy3)
         self.gif_load.setMaximumSize(QSize(150, 150))
         self.gif_load.setTextFormat(Qt.TextFormat.PlainText)
-        self.gif_load.setPixmap(QPixmap(u"../imgs/loaging_ofc.gif"))
+        self.gif_load.setPixmap(QPixmap(u"../imgs/load.gif"))
         self.gif_load.setScaledContents(True)
         self.gif_load.setAlignment(Qt.AlignmentFlag.AlignHCenter|Qt.AlignmentFlag.AlignTop)
 
         self.gridLayout_3.addWidget(self.gif_load, 1, 1, 1, 1)
 
-        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_3.addItem(self.horizontalSpacer_3, 1, 0, 1, 1)
-
         self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_3.addItem(self.horizontalSpacer_4, 1, 2, 1, 1)
+
+        self.text_load = QLabel(self.frame_3)
+        self.text_load.setObjectName(u"text_load")
+        font2 = QFont()
+        font2.setPointSize(18)
+        font2.setItalic(True)
+        self.text_load.setFont(font2)
+        self.text_load.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_3.addWidget(self.text_load, 2, 1, 1, 1)
 
 
         self.verticalLayout_2.addWidget(self.frame_3)
@@ -265,8 +267,8 @@ class Ui_MainWindow(object):
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"Setor correspondente :", None))
         self.pushButton_2.setText(QCoreApplication.translate("MainWindow", u"Manual de uso", None))
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"Favor preencha o formul\u00e1rio:", None))
-        self.text_load.setText(QCoreApplication.translate("MainWindow", u"Carregando...", None))
         self.gif_load.setText("")
+        self.text_load.setText(QCoreApplication.translate("MainWindow", u"Carregando...", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Gerar Assinatura", None))
         self.logo_hori.setText("")
         self.label.setText(QCoreApplication.translate("MainWindow", u"Gerador de assinatura", None))

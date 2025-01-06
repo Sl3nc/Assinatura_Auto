@@ -61,7 +61,7 @@ class Imagem:
 
 class Assinatura:
     def __init__(self) -> None:
-        self.base_ass = Arquivo(resource_path('src\\bases\\base_assinaturas.docx'))
+        self.base_ass = Arquivo(resource_path('src\\bases\\base_assinaturas_25y.docx'))
         self.base_texto = Arquivo(resource_path('src\\bases\\base_texto.docx'))
 
         self.ENDR_EMAIL = '@deltaprice.com.br'
@@ -127,10 +127,11 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             self.executar)
 
         self.lineEdit.setPlaceholderText('Preencha aqui')
+        self.setor_exption = 'Não exibir*'
 
         self.comboBox.setPlaceholderText('Selecione a opção')
         self.comboBox.addItems(
-            ['Processos', 'Financeiro', 'Fiscal', 'Contabilidade', 'Trabalhista']
+            ['Processos', 'Financeiro', 'Fiscal', 'Contabilidade', 'Trabalhista', self.setor_exption]
             )
 
         self.text_load.show()
@@ -144,10 +145,12 @@ class MainWindow(Ui_MainWindow, QMainWindow):
                 raise Exception('Favor selecione seu setor!')
 
             self.nome_arq =  self.onde_salvar()
+            setor = self.comboBox.currentText()
+            setor = '' if setor == self.setor_exption else setor.lower()
 
             self._worker = Worker(
                 self.lineEdit.text(),
-                self.comboBox.currentText().lower(),
+                setor,
                 self.nome_arq
                 )
             
