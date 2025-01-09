@@ -32,7 +32,7 @@ class Arquivo:
 
 class Imagem:
     def __init__(self) -> None:
-        self.AREA_CORTE = (0, 40, 1524, 584)
+        self.AREA_CORTE = (0, 40, 1524, 540)
         #(esquerda, topo, direita, baixo)
         pass
 
