@@ -35,7 +35,7 @@ class Arquivo:
 
 class Imagem:
     def __init__(self) -> None:
-        self.AREA_CORTE = (0, 50, 1524, 564)
+        self.AREA_CORTE = (0, 60, 1524, 584)
         #(esquerda, topo, direita, baixo)
         pass
 
@@ -62,16 +62,13 @@ class Imagem:
 class Assinatura:
     def __init__(self) -> None:
         self.base_ass = Arquivo(resource_path('src\\bases\\base_assinaturas_25y.docx'))
-        self.base_texto = Arquivo(resource_path('src\\bases\\base_texto.docx'))
 
         self.ENDR_EMAIL = '@deltaprice.com.br'
 
         self.NOME_ARQ = 'assin_word.docx'
-        self.NOME_PNG = 'page.png'
 
         self.KEY_NOME = 'nome'
         self.KEY_SETOR = 'setor'
-        self.KEY_IMG = 'img'
         pass
 
     def preencher_modelo(self, nome_func: str, setor: str):
@@ -82,16 +79,9 @@ class Assinatura:
 
         self.base_ass.renderizar(ref, self.NOME_ARQ)
 
-    def add_img(self, nome_arq: str):
-        # Create a Document object
-        Imagem().gerar_png(self.NOME_PNG, self.NOME_ARQ)
+    def create_img(self, nome_png: str):
+        Imagem().gerar_png(nome_png, self.NOME_ARQ)
         os.remove(self.NOME_ARQ)
-
-        my_image = self.base_texto.enquadro(self.NOME_PNG)
-        
-        ref = {self.KEY_IMG: my_image}
-        self.base_texto.renderizar(ref, nome_arq+'.docx')
-        os.remove(self.NOME_PNG)
 
 class Worker(QObject):
     inicio = Signal(bool)
@@ -108,7 +98,7 @@ class Worker(QObject):
             self.inicio.emit(True)
             ass = Assinatura()
             ass.preencher_modelo(self.nome_func, self.setor)
-            ass.add_img(self.nome_arq)
+            ass.create_img(self.nome_arq)
             self.fim.emit(False)
         except Exception as err:
             print(traceback.print_exc())
@@ -184,16 +174,15 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             self.gif_load.hide()
             self.centralwidget.show()
             messagebox.showinfo(title='Aviso', message='Abrindo o arquivo gerado!')
-            os.startfile(self.nome_arq+'.docx')
+            os.startfile(self.nome_arq)
 
     def onde_salvar(self):
-        return asksaveasfilename(title='Favor selecionar a pasta onde será salvo', filetypes=((".docx","*.docx"),))
+        file = f'{asksaveasfilename(title='Favor selecionar a pasta onde será salvo', filetypes=((".png","*.png"),))}.png'
 
-        # if file == '':
-        #     return self.retry_save()
+        return file if file != '' else self.retry_save()
 
     def retry_save(self):
-        resp = messagebox.askyesno(title='Deseja cancelar a operação?', filetypes=((".docx","*.docx"),))
+        resp = messagebox.askyesno(title='Deseja cancelar a operação?', filetypes=((".png","*.png"),))
         if resp == True:
             raise 'Operação cancelada!'
         else:
