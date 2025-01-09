@@ -30,12 +30,9 @@ class Arquivo:
         self.caminho.render(ref)
         self.caminho.save(path)
 
-    def enquadro(self, img:str):
-        return InlineImage(self.caminho, img, width=Mm(100))
-
 class Imagem:
     def __init__(self) -> None:
-        self.AREA_CORTE = (0, 60, 1524, 584)
+        self.AREA_CORTE = (0, 40, 1524, 584)
         #(esquerda, topo, direita, baixo)
         pass
 
@@ -63,8 +60,6 @@ class Assinatura:
     def __init__(self) -> None:
         self.base_ass = Arquivo(resource_path('src\\bases\\base_assinaturas_25y.docx'))
 
-        self.ENDR_EMAIL = '@deltaprice.com.br'
-
         self.NOME_ARQ = 'assin_word.docx'
 
         self.KEY_NOME = 'nome'
@@ -74,7 +69,7 @@ class Assinatura:
     def preencher_modelo(self, nome_func: str, setor: str):
         ref = {
             self.KEY_NOME: nome_func,
-            self.KEY_SETOR: setor + self.ENDR_EMAIL
+            self.KEY_SETOR: setor
         }
 
         self.base_ass.renderizar(ref, self.NOME_ARQ)
@@ -105,6 +100,7 @@ class Worker(QObject):
             messagebox.showerror('Aviso', err)
 
 class MainWindow(Ui_MainWindow, QMainWindow):
+
     def __init__(self, parent = None) -> None:
         super().__init__(parent)
         self.setupUi(self)
@@ -124,6 +120,8 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             ['Processos', 'Financeiro', 'Fiscal', 'Contabilidade', 'Trabalhista', self.setor_exption]
             )
 
+        self.ENDR_EMAIL = '@deltaprice.com.br'
+
         self.text_load.show()
         self.movie.start()
 
@@ -136,7 +134,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
 
             self.nome_arq =  self.onde_salvar()
             setor = self.comboBox.currentText()
-            setor = '' if setor == self.setor_exption else setor.lower()
+            setor = '' if setor == self.setor_exption else f'\n{setor.lower() + self.ENDR_EMAIL}'
 
             self._worker = Worker(
                 self.lineEdit.text(),
