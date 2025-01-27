@@ -31,12 +31,14 @@ class Arquivo:
         self.caminho.save(path)
 
     def enquadro(self, img:str):
-        return InlineImage(self.caminho, img, width=Mm(100))
+        return InlineImage(self.caminho, img, width=Mm(110))
 
 class Imagem:
     def __init__(self) -> None:
         self.AREA_CORTE = (0, 50, 1524, 564)
         #(esquerda, topo, direita, baixo)
+
+        self.porc_to_remove = 20
         pass
 
     def gerar_png(self, nome_png : str, nome_arq : str):
@@ -56,8 +58,15 @@ class Imagem:
         # Cortando a imagem 
         imagem_cortada = imagem.crop(self.AREA_CORTE)
 
+        # imagem_cortada.resize\
+        #     ((self.porc_resize(imagem_cortada.width),\
+        #       self.porc_resize(imagem_cortada.height)))
+
         # Salvando a imagem em outro formato
         imagem_cortada.save(nome_png)
+
+    def porc_resize(self, value: int):
+        return int((value * (100 - self.porc_to_remove)) / 100)
 
 class Assinatura:
     def __init__(self) -> None:
