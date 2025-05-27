@@ -13,13 +13,7 @@ import traceback
 import time
 import os
 import sys
-
-def resource_path(relative_path):
-    base_path = getattr(
-        sys,
-        '_MEIPASS',
-        os.path.dirname(os.path.abspath(__file__)))
-    return os.path.join(base_path, relative_path)
+from pathlib import Path
 
 class Arquivo:
     def __init__(self, caminho: str) -> None:
@@ -61,8 +55,12 @@ class Imagem:
 
 class Assinatura:
     def __init__(self) -> None:
-        self.base_ass = Arquivo(resource_path('src\\bases\\base_assinaturas_25y.docx'))
-        self.base_texto = Arquivo(resource_path('src\\bases\\base_texto.docx'))
+        self.base_ass = Arquivo(
+            (Path(__file__).parent/'src'/'bases'/'base_assinaturas_25y.docx').__str__()
+        )
+        self.base_texto = Arquivo(
+            (Path(__file__).parent/'src'/'bases'/'base_texto.docx').__str__()
+        )
 
         self.ENDR_EMAIL = '@deltaprice.com.br'
 
@@ -118,15 +116,20 @@ class MainWindow(Ui_MainWindow, QMainWindow):
     def __init__(self, parent = None) -> None:
         super().__init__(parent)
         self.setupUi(self)
-        self.setWindowIcon((QIcon(resource_path('src\\imgs\\ass-icon.ico'))))
-        self.logo_hori.setPixmap(QPixmap(resource_path('src\\imgs\\ass-hori.png')))
-        self.movie = QMovie(resource_path("src\\imgs\\load.gif"))
+        self.setWindowIcon((QIcon(
+            (Path(__file__).parent/'src'/'imgs'/'ass-icon.ico').__str__()
+        )))
+        self.logo_hori.setPixmap(QPixmap(
+            (Path(__file__).parent/'src'/'imgs'/'ass-hori.png').__str__()
+        ))
+        self.movie = QMovie(
+            (Path(__file__).parent/'src'/'imgs'/'load.gif').__str__()
+        )
         self.gif_load.setMovie(self.movie)
 
         self.pushButton.clicked.connect(
             self.executar)
 
-        self.lineEdit.setPlaceholderText('Preencha aqui')
         self.setor_exption = 'Não exibir*'
 
         self.comboBox.setPlaceholderText('Selecione a opção')
