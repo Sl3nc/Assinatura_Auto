@@ -16,45 +16,65 @@ import sys
 from pathlib import Path
 
 class Arquivo:
+    """
+    Classe responsável por manipular arquivos de template .docx usando docxtpl.
+    """
     def __init__(self, caminho: str) -> None:
+        """
+        Inicializa o objeto com o caminho do template .docx.
+        """
         self.caminho = DocxTemplate(caminho)
         pass
 
     def renderizar(self, ref: dict, path: str):
+        """
+        Renderiza o template com os dados fornecidos e salva no caminho especificado.
+        """
         self.caminho.render(ref)
         self.caminho.save(path)
 
     def enquadro(self, img:str):
+        """
+        Insere uma imagem no template, ajustando seu tamanho.
+        """
         return InlineImage(self.caminho, img, width=Mm(100))
 
 class Imagem:
+    """
+    Classe responsável por gerar e cortar imagens a partir de documentos Word.
+    """
     def __init__(self) -> None:
+        # Área de corte da imagem (esquerda, topo, direita, baixo)
         self.AREA_CORTE = (0, 50, 1524, 564)
-        #(esquerda, topo, direita, baixo)
         pass
 
     def gerar_png(self, nome_png : str, nome_arq : str):
+        """
+        Gera uma imagem PNG da primeira página de um documento Word e realiza o corte.
+        """
         document = sd.Document(nome_arq)
-        # Convert a specific page to bitmap image
         imageStream = document.SaveImageToStreams(0, sd.ImageType.Bitmap)
-        # Save the bitmap to a PNG file
         with open(nome_png,'wb') as imageFile:
             imageFile.write(imageStream.ToArray())
         document.Close()
         self.__cortar_img(nome_png)
 
     def __cortar_img(self, nome_png):
-        # Abrindo uma imagem
+        """
+        Realiza o corte da imagem gerada, conforme a área definida.
+        """
         imagem = Image.open(nome_png)
-
-        # Cortando a imagem 
         imagem_cortada = imagem.crop(self.AREA_CORTE)
-
-        # Salvando a imagem em outro formato
         imagem_cortada.save(nome_png)
 
 class Assinatura:
+    """
+    Classe principal para geração de assinaturas automáticas.
+    """
     def __init__(self) -> None:
+        """
+        Inicializa os templates base e define constantes.
+        """
         self.base_ass = Arquivo(
             (Path(__file__).parent/'src'/'bases'/'base_assinaturas_25y.docx').__str__()
         )
@@ -73,6 +93,9 @@ class Assinatura:
         pass
 
     def preencher_modelo(self, nome_func: str, setor: str):
+        """
+        Preenche o template de assinatura com nome e setor do funcionário.
+        """
         ref = {
             self.KEY_NOME: nome_func,
             self.KEY_SETOR: setor + self.ENDR_EMAIL
@@ -81,7 +104,9 @@ class Assinatura:
         self.base_ass.renderizar(ref, self.NOME_ARQ)
 
     def add_img(self, nome_arq: str):
-        # Create a Document object
+        """
+        Gera a imagem da assinatura e insere no template final.
+        """
         Imagem().gerar_png(self.NOME_PNG, self.NOME_ARQ)
         os.remove(self.NOME_ARQ)
 
@@ -92,6 +117,9 @@ class Assinatura:
         os.remove(self.NOME_PNG)
 
 class Worker(QObject):
+    """
+    Worker para execução em thread separada, evitando travamento da interface.
+    """
     inicio = Signal(bool)
     fim = Signal(bool)
 
@@ -102,6 +130,9 @@ class Worker(QObject):
         self.nome_arq = nome_arq
 
     def main(self):
+        """
+        Executa o processo de geração da assinatura.
+        """
         try:
             self.inicio.emit(True)
             ass = Assinatura()
@@ -113,6 +144,9 @@ class Worker(QObject):
             messagebox.showerror('Aviso', err)
 
 class MainWindow(Ui_MainWindow, QMainWindow):
+    """
+    Classe da janela principal da aplicação.
+    """
     def __init__(self, parent = None) -> None:
         super().__init__(parent)
         self.setupUi(self)
@@ -141,6 +175,9 @@ class MainWindow(Ui_MainWindow, QMainWindow):
         self.movie.start()
 
     def executar(self):
+        """
+        Inicia o processo de geração da assinatura ao clicar no botão.
+        """
         try:
             if self.lineEdit.text() == '':
                 raise Exception('Favor insirir seu nome!')
@@ -174,6 +211,9 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             messagebox.showerror('Aviso', err)
 
     def load(self, value: bool):
+        """
+        Atualiza a interface durante o processamento.
+        """
         if value == True:
             self.pushButton.setDisabled(True)
             self.stackedWidget.setCurrentIndex(1)
@@ -190,12 +230,15 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             os.startfile(self.nome_arq+'.docx')
 
     def onde_salvar(self):
+        """
+        Abre o diálogo para o usuário escolher onde salvar o arquivo gerado.
+        """
         return asksaveasfilename(title='Favor selecionar a pasta onde será salvo', filetypes=((".docx","*.docx"),))
 
-        # if file == '':
-        #     return self.retry_save()
-
     def retry_save(self):
+        """
+        Pergunta ao usuário se deseja cancelar ou tentar salvar novamente.
+        """
         resp = messagebox.askyesno(title='Deseja cancelar a operação?', filetypes=((".docx","*.docx"),))
         if resp == True:
             raise 'Operação cancelada!'
@@ -203,6 +246,7 @@ class MainWindow(Ui_MainWindow, QMainWindow):
             return self.onde_salvar()
 
 if __name__ == '__main__':
+    # Inicializa a aplicação Qt
     app = QApplication()
     window = MainWindow()
     window.show()
