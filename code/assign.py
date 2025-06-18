@@ -18,7 +18,7 @@ class Assinatura:
             (Path(__file__).parent/'src'/'bases'/'base_texto.docx').__str__()
         )
 
-        self.ENDR_EMAIL = '@deltaprice.com.br'
+        self.ENDR_EMAIL = '@deltaprice.com.br\n'
 
         self.NOME_ARQ = 'assin_word.docx'
         self.NOME_PNG = 'page.png'
@@ -32,9 +32,10 @@ class Assinatura:
         """
         Preenche o template de assinatura com nome e setor do funcionário.
         """
+        if setor != '': setor = setor + self.ENDR_EMAIL
         ref = {
             self.KEY_NOME: nome_func,
-            self.KEY_SETOR: setor + self.ENDR_EMAIL
+            self.KEY_SETOR: setor
         }
 
         self.base_ass.renderizar(ref, self.NOME_ARQ)
